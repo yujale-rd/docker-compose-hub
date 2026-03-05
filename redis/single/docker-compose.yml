@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # =================================================================================================
+  # Redis
+  # 资源限制：内存上限 512MB，预留 128MB
+  # =================================================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: redis-single
+    hostname: redis-single
+    restart: always
+    command: redis-server --appendonly yes --requirepass "redis104802"
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis104802", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"

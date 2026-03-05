@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # =================================================================================================
+  # PostgreSQL
+  # 资源限制：内存上限 1GB，预留 256MB
+  # =================================================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-single
+    hostname: postgres-single
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: M4Ze68DrApRCix
+      POSTGRES_DB: devdb
+      TZ: Asia/Shanghai
+    ports:
+      - "12345:5432"
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.5G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d devdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
