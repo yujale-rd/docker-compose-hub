@@ -1,0 +1,44 @@
+version: '3'
+services:
+  redis-master:
+    image: redis:alpine
+    container_name: redis-master
+    environment:
+      - REDIS_MASTER_PORT=16379
+      - REDIS_MASTER_PASSWORD=redis104802
+      - REDIS_MASTER_APPENDONLY=yes
+      - REDIS_MASTER_BIND=0.0.0.0
+      - REDIS_MASTER_LOGLEVEL=debug
+    ports:
+      - "16379:6379"
+    command: redis-server --appendonly yes --requirepass redis104802 --bind 0.0.0.0 --loglevel debug
+
+  redis-slave-1:
+    image: redis:alpine
+    container_name: redis-slave-1
+    environment:
+      - REDIS_SLAVE1_PORT=16380
+      - REDIS_MASTER_AUTH_PASSWORD=redis104802
+      - REDIS_SLAVE1_APPENDONLY=yes
+      - REDIS_SLAVE1_BIND=0.0.0.0
+      - REDIS_SLAVE1_LOGLEVEL=debug
+    ports:
+      - "16380:6379"
+    command: redis-server --slaveof redis-master 6379 --masterauth redis104802 --requirepass redis104802 --appendonly yes --bind 0.0.0.0 --loglevel debug
+    depends_on:
+      - redis-master
+
+  redis-slave-2:
+    image: redis:alpine
+    container_name: redis-slave-2
+    environment:
+      - REDIS_SLAVE2_PORT=16381
+      - REDIS_MASTER_AUTH_PASSWORD=redis104802
+      - REDIS_SLAVE2_APPENDONLY=yes
+      - REDIS_SLAVE2_BIND=0.0.0.0
+      - REDIS_SLAVE2_LOGLEVEL=debug
+    ports:
+      - "16381:6379"
+    command: redis-server --slaveof redis-master 6379 --masterauth redis104802 --requirepass redis104802 --appendonly yes --bind 0.0.0.0 --loglevel debug
+    depends_on:
+      - redis-master
