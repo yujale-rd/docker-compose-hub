@@ -2,58 +2,48 @@
 
 此配置使用 `bitnami/postgresql-repmgr` 实现具有复制管理功能的高可用性 (HA)，并使用 `bitnami/pgpool` 进行负载均衡和连接池管理。
 
-## 架构
+## 架构概览
 
-- **pg-master**: 主 PostgreSQL 节点。
-  - 端口: 15432 (宿主机) -> 5432 (容器)
-  - 使用 Repmgr 进行集群管理。
-- **pg-slave**: 备用 PostgreSQL 节点。
-  - 端口: 15433 (宿主机) -> 5432 (容器)
-  - 从 `pg-master` 复制数据。
-- **pgpool**: 连接池和负载均衡器。
-  - 端口: 15434 (宿主机) -> 5432 (容器)
-  - 应用程序入口点。
-  - 在主节点和从节点之间平衡读取查询。
-  - 将写入查询定向到主节点。
+- **pg-master**: 主 PostgreSQL 节点 (Port 15432 -> 5432)。
+- **pg-slave**: 备用 PostgreSQL 节点 (Port 15433 -> 5432)。
+- **pgpool**: 负载均衡器入口 (Port 15434 -> 5432)。
+  - **读写分离**: 写入 -> Master, 读取 -> Master/Slave。
 
-## 配置
+## 快速开始
 
-### 凭据
+1. **启动 (Start)**:
+   ```bash
+   docker-compose up -d
+   ```
+   *注意：首次启动需要时间进行集群初始化和节点同步。*
 
-- **PostgreSQL 用户**: `postgres`
-- **PostgreSQL 密码**: `postgrespassword`
+2. **检查状态 (Check Status)**:
+   通过 Pgpool 查看集群节点状态：
+   ```bash
+   # 使用 docker exec 连接
+   docker exec -it pgpool psql -U postgres -d ha -c "SHOW POOL_NODES"
+   ```
+   应显示所有节点状态为 `up`，其中一个角色为 `primary`。
+
+3. **验证读写分离 (Verify HA)**:
+   
+   - **创建表 (Write -> Master)**:
+     ```bash
+     docker exec -it pgpool psql -U postgres -d ha -c "CREATE TABLE test (id serial PRIMARY KEY, name VARCHAR(50)); INSERT INTO test (name) VALUES ('HA Cluster');"
+     ```
+
+   - **读取数据 (Read -> Load Balanced)**:
+     ```bash
+     docker exec -it pgpool psql -U postgres -d ha -c "SELECT * FROM test;"
+     ```
+
+## 默认配置
+
+- **PostgreSQL 用户**: `postgres` / `postgrespassword`
 - **数据库**: `ha`
-- **Repmgr 用户**: `repmgr`
-- **Repmgr 密码**: `repmgrpassword`
-- **Pgpool 管理员用户**: `admin`
-- **Pgpool 管理员密码**: `adminpassword`
+- **Pgpool 管理员**: `admin` / `adminpassword`
 
-## 使用方法
+## 故障排查
 
-1. 启动集群：
-    ```bash
-    docker-compose up -d
-    ```
-
-2. 通过 Pgpool 检查状态：
-    连接到 Pgpool 并检查节点：
-    ```bash
-    PGPASSWORD=postgrespassword psql -h localhost -p 15434 -U postgres -d ha -c "SHOW POOL_NODES"
-    ```
-    *注意：您可能需要在本地安装 `postgresql-client` 或使用 `docker exec`。*
-
-    使用 Docker Exec：
-    ```bash
-    docker exec -it pgpool psql -U postgres -d ha -c "SHOW POOL_NODES"
-    ```
-
-3. 验证读写分离：
-    创建表（写入 -> Master）：
-    ```bash
-    docker exec -it pgpool psql -U postgres -d ha -c "CREATE TABLE test (id serial PRIMARY KEY, name VARCHAR(50)); INSERT INTO test (name) VALUES ('HA Cluster');"
-    ```
-
-    读取数据（读取 -> 负载均衡）：
-    ```bash
-    docker exec -it pgpool psql -U postgres -d ha -c "SELECT * FROM test;"
-    ```
+- **节点显示 Down**: 检查容器日志，确认 Repmgr 是否成功配置复制。
+- **脑裂 (Split Brain)**: 确保网络连通性，Pgpool 会尝试自动处理故障转移，但在极端网络分区下可能需要人工干预。

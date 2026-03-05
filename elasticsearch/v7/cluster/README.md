@@ -2,44 +2,55 @@
 
 此配置运行一个包含 3 个节点的 Elasticsearch 7.17 集群和 Kibana。
 
-## 服务
+## 服务概览
 
 - **es01**: 主节点 (Master + Data)。
   - 角色: `master, data, ingest`
   - 端口: 9200 (HTTP)
-  - 资源:
-    - Heap: 1G (Xms/Xmx)
-    - Limit: 2.5G 内存, 2.0 CPU
+  - 资源: Heap 1G, Limit 2.5G 内存
 - **es02, es03**: 数据节点 (Data Only)。
-  - 角色: `data, ingest` (非 Master)
-  - 资源:
-    - Heap: 512M (Xms/Xmx)
-    - Limit: 1G 内存, 1.0 CPU
-- **kibana**: Kibana 仪表板。
-  - 端口: 5601
-  - 连接到 `es01` (从而连接到集群)。
+  - 角色: `data, ingest`
+  - 资源: Heap 512M, Limit 1G 内存
+- **kibana**: 仪表板 (Port 5601)。
 
-## 先决条件
+## 快速开始
 
-确保您的 Docker 主机具有足够的虚拟内存映射计数：
+1. **系统配置 (Prerequisites)**:
+   宿主机必须配置足够的虚拟内存映射数。
 
-```bash
-sysctl -w vm.max_map_count=262144
-```
+   - **Linux**:
+     ```bash
+     sysctl -w vm.max_map_count=262144
+     ```
+   - **macOS / Docker Desktop**:
+     默认已配置。
 
-## 使用方法
-
-1. 启动集群：
+2. **启动 (Start)**:
 
    ```bash
    docker-compose up -d
    ```
 
-2. 访问 Kibana：
-   在浏览器中打开 [http://localhost:5601](http://localhost:5601)。
+   _注意：首次启动可能需要几分钟。_
 
-3. 验证集群健康状态：
-   ```bash
-   curl http://localhost:9200/_cat/nodes?v
-   curl http://localhost:9200/_cluster/health?pretty
-   ```
+3. **验证 (Verify)**:
+
+   - **集群健康**:
+     ```bash
+     curl http://localhost:9200/_cat/health?v
+     ```
+     状态应为 `green` 或 `yellow` (如果副本数未满足)。
+   - **节点列表**:
+     ```bash
+     curl http://localhost:9200/_cat/nodes?v
+     ```
+     应显示 3 个节点。
+
+4. **访问 Kibana**:
+   打开浏览器访问 [http://localhost:5601](http://localhost:5601)。
+
+## 故障排查
+
+- **节点无法加入集群**: 检查 `es02` 和 `es03` 日志，确认是否能解析并连接到 `es01`。
+- **内存溢出 (OOM)**: 如果容器频繁重启 (Exit Code 137)，请尝试增加 Docker 分配的内存或减少 `ES_JAVA_OPTS`。
+- **Kibana 连接失败**: Kibana 需要等待 ES 集群变为 `Yellow` 或 `Green` 状态才能完全启动。

@@ -1,31 +1,55 @@
 # Kafka 单实例 (KRaft 模式)
 
+此配置使用 Bitnami Kafka 镜像运行单实例 Kafka，采用 KRaft 模式（无需 Zookeeper）。
+
 ## 快速开始
 
-```bash
-docker-compose up -d
-```
+1. **启动 (Start)**:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **验证 (Verify)**:
+   
+   - **创建 Topic**:
+     ```bash
+     docker exec -it kafka-single kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9092
+     ```
+   
+   - **生产消息 (Producer)**:
+     ```bash
+     docker exec -it kafka-single kafka-console-producer.sh --topic test-topic --bootstrap-server localhost:9092
+     > Hello Kafka
+     ```
+   
+   - **消费消息 (Consumer)**:
+     ```bash
+     docker exec -it kafka-single kafka-console-consumer.sh --topic test-topic --from-beginning --bootstrap-server localhost:9092
+     # 应显示 "Hello Kafka"
+     ```
 
 ## 默认配置
 
-- **Version (版本)**: Bitnami Kafka 3.4
-- **Mode (模式)**: KRaft (无需 Zookeeper)
-- **Port (端口)**:
-  - `9093`: **External (外部访问)**，绑定 IP `192.168.19.10`
-  - `9092`: **Internal (内部访问)**，容器互联使用 `kafka-single:9092`
-  - `8080`: **UI (管理界面)**
-- **自动创建 Topic**: `true` (当 Producer 发送不存在的 Topic 时自动创建)
-- **最大消息大小**: 100MB (已调大)
-- **资源限制**: 1G 内存 (JVM Heap 512M)
-- **数据持久化**: `./data` 目录
+- **版本**: Bitnami Kafka 3.4
+- **端口**:
+  - `9093`: 外部访问 (默认绑定 IP `192.168.19.10`，需修改)
+  - `9092`: 内部容器互联 (`kafka-single:9092`)
+  - `8080`: Web UI (如有)
+- **资源限制**: 1G 内存 (Limit), 512M Heap
+- **持久化**: `./data` 目录
 
-## 访问说明
+## 重要注意事项
 
-- **端口**: `9093`
-- **UI 端口**: `8080` (Web 管理界面)
-- **监听地址**: `<YOUR_SERVER_IP>:9093` (外部直连，需替换为公网 IP)
-- **内部地址**: `kafka-single:9092` (容器内互联)
+**外部访问配置**:
+默认配置的 `KAFKA_CFG_ADVERTISED_LISTENERS` 中包含 IP `192.168.19.10`。如果您的服务器 IP 不同，**必须**修改 `docker-compose.yml`：
 
-## 注意事项
+```yaml
+    environment:
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-single:9092,EXTERNAL://<YOUR_SERVER_IP>:9093
+```
+将 `<YOUR_SERVER_IP>` 替换为您实际的公网或局域网 IP。
 
-若服务器 IP 发生变化，请修改 `docker-compose.yml` 中的 `KAFKA_CFG_ADVERTISED_LISTENERS` 配置。
+## 故障排查
+
+- **无法连接**: 检查 `ADVERTISED_LISTENERS` 配置是否与客户端访问的 IP 一致。
+- **OOM**: 检查 JVM Heap 设置，默认配置为 512M。
