@@ -1,11 +1,11 @@
-# Redis Master-Slave (1 Master, 2 Slaves) with Password
+# Redis 主从复制 (1主 2从) 带密码认证
 
-This setup provides a Redis cluster with 1 Master and 2 Slaves using Docker Compose, secured with a password.
+此配置使用 Docker Compose 提供一个包含 1 个主节点和 2 个从节点的 Redis 集群，并启用了密码认证。
 
-## Configuration
+## 配置
 
-- **Password**: `redis104802`
-- **Environment Variables**:
+- **密码**: `redis104802`
+- **环境变量**:
   - `REDIS_MASTER_PASSWORD`
   - `REDIS_MASTER_AUTH_PASSWORD`
   - `REDIS_MASTER_PORT`
@@ -14,40 +14,40 @@ This setup provides a Redis cluster with 1 Master and 2 Slaves using Docker Comp
   - `REDIS_*_BIND`
   - `REDIS_*_LOGLEVEL`
 
-## Services
+## 服务
 
-- **redis-master**: The master Redis instance.
-  - Port: 16379 (Host) -> 6379 (Container)
-  - Log Level: debug
-- **redis-slave-1**: The first slave instance.
-  - Port: 16380 (Host) -> 6379 (Container)
-  - Log Level: debug
-- **redis-slave-2**: The second slave instance.
-  - Port: 16381 (Host) -> 6379 (Container)
-  - Log Level: debug
+- **redis-master**: 主 Redis 实例。
+  - 端口: 16379 (宿主机) -> 6379 (容器)
+  - 日志级别: debug
+- **redis-slave-1**: 第一个从实例。
+  - 端口: 16380 (宿主机) -> 6379 (容器)
+  - 日志级别: debug
+- **redis-slave-2**: 第二个从实例。
+  - 端口: 16381 (宿主机) -> 6379 (容器)
+  - 日志级别: debug
 
-## Usage
+## 使用方法
 
-1. Start the cluster:
+1. 启动集群：
 
    ```bash
    docker-compose up -d
    ```
 
-2. Check the status:
+2. 检查状态：
 
    ```bash
    docker-compose ps
    ```
 
-3. Verify replication:
-   Connect to the master (requires password) and set a value:
+3. 验证复制：
+   连接到主节点（需要密码）并设置一个值：
 
    ```bash
    docker exec -it redis-master redis-cli -a redis104802 set mykey "Hello World"
    ```
 
-   Connect to a slave (requires password) and get the value:
+   连接到从节点（需要密码）并获取该值：
 
    ```bash
    docker exec -it redis-slave-1 redis-cli -a redis104802 get mykey

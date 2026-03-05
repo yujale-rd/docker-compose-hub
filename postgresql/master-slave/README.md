@@ -1,59 +1,59 @@
-# PostgreSQL HA Cluster with Repmgr and Pgpool
+# 使用 Repmgr 和 Pgpool 的 PostgreSQL 高可用集群
 
-This setup uses `bitnami/postgresql-repmgr` for High Availability (HA) with replication management, and `bitnami/pgpool` for load balancing and connection pooling.
+此配置使用 `bitnami/postgresql-repmgr` 实现具有复制管理功能的高可用性 (HA)，并使用 `bitnami/pgpool` 进行负载均衡和连接池管理。
 
-## Architecture
+## 架构
 
-- **pg-master**: The primary PostgreSQL node.
-  - Port: 15432 (Host) -> 5432 (Container)
-  - Uses Repmgr for cluster management.
-- **pg-slave**: The standby PostgreSQL node.
-  - Port: 15433 (Host) -> 5432 (Container)
-  - Replicates from `pg-master`.
-- **pgpool**: The connection pooler and load balancer.
-  - Port: 15434 (Host) -> 5432 (Container)
-  - Application entry point.
-  - Balances read queries between master and slave.
-  - Directs write queries to the master.
+- **pg-master**: 主 PostgreSQL 节点。
+  - 端口: 15432 (宿主机) -> 5432 (容器)
+  - 使用 Repmgr 进行集群管理。
+- **pg-slave**: 备用 PostgreSQL 节点。
+  - 端口: 15433 (宿主机) -> 5432 (容器)
+  - 从 `pg-master` 复制数据。
+- **pgpool**: 连接池和负载均衡器。
+  - 端口: 15434 (宿主机) -> 5432 (容器)
+  - 应用程序入口点。
+  - 在主节点和从节点之间平衡读取查询。
+  - 将写入查询定向到主节点。
 
-## Configuration
+## 配置
 
-### Credentials
+### 凭据
 
-- **PostgreSQL User**: `postgres`
-- **PostgreSQL Password**: `postgrespassword`
-- **Database**: `ha`
-- **Repmgr User**: `repmgr`
-- **Repmgr Password**: `repmgrpassword`
-- **Pgpool Admin User**: `admin`
-- **Pgpool Admin Password**: `adminpassword`
+- **PostgreSQL 用户**: `postgres`
+- **PostgreSQL 密码**: `postgrespassword`
+- **数据库**: `ha`
+- **Repmgr 用户**: `repmgr`
+- **Repmgr 密码**: `repmgrpassword`
+- **Pgpool 管理员用户**: `admin`
+- **Pgpool 管理员密码**: `adminpassword`
 
-## Usage
+## 使用方法
 
-1. Start the cluster:
+1. 启动集群：
     ```bash
     docker-compose up -d
     ```
 
-2. Check status via Pgpool:
-    Connect to Pgpool and check the nodes:
+2. 通过 Pgpool 检查状态：
+    连接到 Pgpool 并检查节点：
     ```bash
     PGPASSWORD=postgrespassword psql -h localhost -p 15434 -U postgres -d ha -c "SHOW POOL_NODES"
     ```
-    *Note: You might need to install `postgresql-client` locally or use `docker exec`.*
+    *注意：您可能需要在本地安装 `postgresql-client` 或使用 `docker exec`。*
 
-    Using Docker Exec:
+    使用 Docker Exec：
     ```bash
     docker exec -it pgpool psql -U postgres -d ha -c "SHOW POOL_NODES"
     ```
 
-3. Verify Read/Write Splitting:
-    Create a table (Write -> Master):
+3. 验证读写分离：
+    创建表（写入 -> Master）：
     ```bash
     docker exec -it pgpool psql -U postgres -d ha -c "CREATE TABLE test (id serial PRIMARY KEY, name VARCHAR(50)); INSERT INTO test (name) VALUES ('HA Cluster');"
     ```
 
-    Read data (Read -> Load Balanced):
+    读取数据（读取 -> 负载均衡）：
     ```bash
     docker exec -it pgpool psql -U postgres -d ha -c "SELECT * FROM test;"
     ```

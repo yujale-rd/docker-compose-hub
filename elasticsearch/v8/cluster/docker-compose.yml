@@ -1,0 +1,167 @@
+version: '3.8'
+
+services:
+  es01:
+    image: elasticsearch:8.8.2
+    container_name: es01
+    hostname: es01
+    restart: always
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - node.roles=master,data,ingest
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "TZ=Asia/Shanghai"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es01_data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2.5G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  es02:
+    image: elasticsearch:8.8.2
+    container_name: es02
+    hostname: es02
+    restart: always
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - node.roles=data,ingest
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "TZ=Asia/Shanghai"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es02_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  es03:
+    image: elasticsearch:8.8.2
+    container_name: es03
+    hostname: es03
+    restart: always
+    environment:
+      - node.name=es03
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02,es03
+      - node.roles=data,ingest
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - "TZ=Asia/Shanghai"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es03_data:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+  kibana:
+    image: kibana:8.8.2
+    container_name: kibana-cluster-8
+    hostname: kibana-cluster-8
+    restart: always
+    ports:
+      - 5601:5601
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es01:9200
+      - "TZ=Asia/Shanghai"
+    networks:
+      - elastic
+    depends_on:
+      - es01
+      - es02
+      - es03
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+volumes:
+  es01_data:
+    driver: local
+  es02_data:
+    driver: local
+  es03_data:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
