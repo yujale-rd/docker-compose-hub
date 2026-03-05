@@ -12,6 +12,14 @@ services:
     ports:
       - "16379:6379"
     command: redis-server --appendonly yes --requirepass redis104802 --bind 0.0.0.0 --loglevel debug
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
 
   redis-slave-1:
     image: redis:alpine
@@ -27,6 +35,14 @@ services:
     command: redis-server --slaveof redis-master 6379 --masterauth redis104802 --requirepass redis104802 --appendonly yes --bind 0.0.0.0 --loglevel debug
     depends_on:
       - redis-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
   redis-slave-2:
     image: redis:alpine
@@ -42,3 +58,11 @@ services:
     command: redis-server --slaveof redis-master 6379 --masterauth redis104802 --requirepass redis104802 --appendonly yes --bind 0.0.0.0 --loglevel debug
     depends_on:
       - redis-master
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M

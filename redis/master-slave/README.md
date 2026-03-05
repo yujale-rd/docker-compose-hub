@@ -5,8 +5,11 @@
 ## 服务概览
 
 - **redis-master**: 主节点 (Port 16379 -> 6379)。
+  - 资源: Limit 1G, Reservation 512M
 - **redis-slave-1**: 从节点 1 (Port 16380 -> 6379)。
+  - 资源: Limit 512M, Reservation 256M
 - **redis-slave-2**: 从节点 2 (Port 16381 -> 6379)。
+  - 资源: Limit 512M, Reservation 256M
 - **统一密码**: `redis104802`
 
 ## 快速开始

@@ -5,8 +5,11 @@
 ## 架构概览
 
 - **pg-master**: 主 PostgreSQL 节点 (Port 15432 -> 5432)。
+  - 资源: Limit 2G, Reservation 1G
 - **pg-slave**: 备用 PostgreSQL 节点 (Port 15433 -> 5432)。
+  - 资源: Limit 1G, Reservation 512M
 - **pgpool**: 负载均衡器入口 (Port 15434 -> 5432)。
+  - 资源: Limit 1G, Reservation 256M
   - **读写分离**: 写入 -> Master, 读取 -> Master/Slave。
 
 ## 快速开始

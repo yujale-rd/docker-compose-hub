@@ -5,9 +5,11 @@
 ## 服务概览
 
 - **mysql-master**: 主节点 (Port 13306 -> 3306)。
+  - 资源: Limit 2G, Reservation 1G
   - Root 密码: `root_password`
   - 复制用户: `repl_user` / `repl_password`
 - **mysql-slave**: 从节点 (Port 13307 -> 3306)。
+  - 资源: Limit 1G, Reservation 512M
   - 连接到 `mysql-master`。
 
 ## 快速开始
