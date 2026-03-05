@@ -14,14 +14,17 @@ docker-compose up -d
   - `9093`: **External (外部访问)**，绑定 IP `192.168.19.10`
   - `9092`: **Internal (内部访问)**，容器互联使用 `kafka-single:9092`
   - `8080`: **UI (管理界面)**
-- **Resources (资源限制)**: 1.5G 内存 (Limit), 1G JVM Heap
-- **Persistence (数据持久化)**: `./data` 目录
+- **自动创建 Topic**: `true` (当 Producer 发送不存在的 Topic 时自动创建)
+- **最大消息大小**: 100MB (已调大)
+- **资源限制**: 1G 内存 (JVM Heap 512M)
+- **数据持久化**: `./data` 目录
 
 ## 访问说明
 
-- **Kafka UI**: 访问 `http://192.168.19.10:8080`
-- **External Client (外部客户端)**: 连接地址 `192.168.19.10:9093`
-- **Internal Client (容器互联)**: 连接地址 `kafka-single:9092`
+- **端口**: `9093`
+- **UI 端口**: `8080` (Web 管理界面)
+- **监听地址**: `<YOUR_SERVER_IP>:9093` (外部直连，需替换为公网 IP)
+- **内部地址**: `kafka-single:9092` (容器内互联)
 
 ## 注意事项
 

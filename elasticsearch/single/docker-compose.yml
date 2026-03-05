@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:7.17.21
+    container_name: elasticsearch-single
+    hostname: elasticsearch-single
+    restart: always
+    environment:
+      - "node.name=elasticsearch-single"
+      - "cluster.name=es-docker-cluster"
+      - "discovery.type=single-node"
+      - "bootstrap.memory_lock=true" # 开启内存锁定，避免 swap 导致性能下降
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "xpack.security.enabled=false" # 开发环境禁用安全验证
+      - "TZ=Asia/Shanghai"
+    # 注意：宿主机必须设置 vm.max_map_count >= 262144
+    # Linux: sysctl -w vm.max_map_count=262144
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data:/usr/share/elasticsearch/data
+      - ./plugins:/usr/share/elasticsearch/plugins
+      - ./logs:/usr/share/elasticsearch/logs
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2.5G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
