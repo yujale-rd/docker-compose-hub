@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: zookeeper:3.8
+    restart: always
+    container_name: zookeeper-single
+    hostname: zookeeper-single
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.1'
+          memory: 256M
+    ports:
+      - '2181:2181'
+      # - '2888:2888' # 集群通信端口
+      # - '3888:3888' # 选举端口
+    environment:
+      ZOO_MY_ID: 1
+      TZ: Asia/Shanghai
+    volumes:
+      - ./data:/data
+      - ./datalog:/datalog
+    healthcheck:
+      test: echo ruok | nc 127.0.0.1 2181
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
